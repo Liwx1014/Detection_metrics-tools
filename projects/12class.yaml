@@ -28,4 +28,9 @@ class_mapping:
   roller: "bulldozer"
   long_excavator: "excavator"
   piling_rig_c: "piling_rig"
+
+# 添加标签尺寸过滤阈值配置
+filter_size:
+  min_size: 32  # 长宽同时小于此值的标签将被过滤
+  min_edge: 8   # 任一边小于此值的标签将被过滤
   

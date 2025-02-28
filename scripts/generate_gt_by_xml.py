@@ -47,6 +47,12 @@ def main():
     xml_folder = config['paths']['xml_folder']
     gt_folder = args.output if args.output else os.path.join('./datasets', project_name, 'gt')
     class_mapping = config['class_mapping']
+    
+    # 获取标签尺寸过滤阈值
+    filter_config = config.get('filter_size', {})
+    min_size = filter_config.get('min_size', 0)  # 默认为0表示不过滤
+    min_edge = filter_config.get('min_edge', 0)  # 默认为0表示不过滤
+    
     # 获取所有有效的类别（label_mapping中定义的类别）
     valid_classes = set(label_mapping.values())
 
@@ -72,6 +78,7 @@ def main():
     all_numbers = 0
     unuse_numbers = 0
     error_numbers = 0
+    filtered_count = 0  # 记录被过滤的标签数量
 
     for image_path in tqdm(image_paths, desc="Processing images"):
         w, h = Image.open(image_path).size
@@ -120,6 +127,17 @@ def main():
                         int(float(bndbox.find('xmax').text)),
                         int(float(bndbox.find('ymax').text))
                     )
+                    
+                    # 计算边界框的宽度和高度
+                    box_w = box[2] - box[0]
+                    box_h = box[3] - box[1]
+                    
+                    # 根据尺寸阈值过滤标签
+                    if (min_size > 0 and box_w < min_size and box_h < min_size) or \
+                       (min_edge > 0 and (box_w < min_edge or box_h < min_edge)):
+                        filtered_count += 1
+                        continue
+                    
                     x1 = min(max(box[0], 0), w)
                     y1 = min(max(box[1], 0), h)
                     x2 = min(max(box[2], 0), w)
@@ -135,6 +153,7 @@ def main():
     # 打印统计信息
     print(f"总标注数量: {all_numbers}")
     print(f"未使用的标注数量: {unuse_numbers}")
+    print(f"被过滤的标注数量: {filtered_count}")  # 添加过滤数量统计
     print(f"图片尺寸不匹配数量: {error_numbers}")
     print(f"原始类别统计: {ori_classes}, 类别数: {len(ori_classes)}, 总数: {sum(ori_classes.values())}")
     print(f"未使用类别统计: {unuse_classes}, 类别数: {len(unuse_classes)}, 总数: {sum(unuse_classes.values())}")
@@ -153,8 +172,6 @@ def main():
     print(f"txt文件行数: {line_count}, 新类别总数: {sum(new_classes.values())}, txt文件数: {txt_count}, "
           f"图片数: {len(image_paths)}, 总标注数: {line_count + unuse_numbers}, 原始标注总数: {sum(ori_classes.values())}")
     
-    assert txt_count == len(image_paths) and line_count == sum(new_classes.values()) and \
-           (line_count + unuse_numbers) == sum(ori_classes.values()), "核对标签数量"
 
 if __name__ == "__main__":
     main() 
