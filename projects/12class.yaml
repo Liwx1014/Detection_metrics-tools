@@ -1,0 +1,31 @@
+project_name: "12class"
+
+label_mapping:
+  0: "fire"
+  1: "smoke"
+  2: "nest"
+  3: "dxyw"
+  4: "sgjx"
+  5: "tower_crane"
+  6: "truck_crane"
+  7: "bulldozer"
+  8: "pump_truck"
+  9: "truck"
+  10: "excavator"
+  11: "piling_rig"
+
+paths:
+  image_folder: "/data1/datasets/shudian_2025/images/test/"
+  xml_folder: "/data1/datasets/shudian_2025/annotations/test/"
+
+
+class_mapping:
+  piling_rig_b: "sgjx"
+  fandouche: "truck"
+  oil_tanker_truck: "truck"
+  cement_mixer_truck: "truck"
+  truck_crane_b: "truck"
+  roller: "bulldozer"
+  long_excavator: "excavator"
+  piling_rig_c: "piling_rig"
+  

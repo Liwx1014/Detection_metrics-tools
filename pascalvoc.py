@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 import json
+import yaml
 import _init_paths
 
 from BoundingBox import BoundingBox
@@ -255,17 +256,33 @@ def compute_mAP(gtFolder, detFolder):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='计算目标检测的mAP指标')
-    parser.add_argument('-d', '--det', type=str, required=True, help='检测结果文件夹路径，包含txt格式的检测结果')
-    parser.add_argument('-g', '--gt', type=str, required=True, help='真值标注文件夹路径，包含txt格式的标注文件')
+    parser.add_argument('-p', '--pred', type=str, required=True, help='检测结果文件夹路径，包含txt格式的检测结果')
+    parser.add_argument('-g', '--gt', type=str, help='真值标注文件夹路径，包含txt格式的标注文件')
+    parser.add_argument('-c', '--config', type=str, required=True, help='配置文件路径，例如：projects/12class.yaml')
     parser.add_argument('-i', '--iou', type=float, default=0.5, help='IOU阈值，默认为0.5')
     
-    args = parser.parse_args()  
-    
-    if not os.path.exists(args.det):
-        print(f"错误：检测结果文件夹 {args.det} 不存在")
+    args = parser.parse_args()
+
+    # 加载项目配置文件
+    config_path = os.path.join(os.path.dirname(__file__), args.config)
+    if not os.path.exists(config_path):
+        print(f"错误：配置文件 {config_path} 不存在")
         sys.exit(1)
-    if not os.path.exists(args.gt):
-        print(f"错误：真值标注文件夹 {args.gt} 不存在")
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    # 获取项目名称，如果未配置则使用default
+    project_name = config.get('project_name', 'default')
+    
+    # 设置gt_folder路径
+    gt_folder = args.gt if args.gt else os.path.join('./datasets', project_name, 'gt')
+    
+    if not os.path.exists(args.pred):
+        print(f"错误：检测结果文件夹 {args.pred} 不存在")
+        sys.exit(1)
+    if not os.path.exists(gt_folder):
+        print(f"错误：真值标注文件夹 {gt_folder} 不存在")
         sys.exit(1)
         
-    compute_mAP(args.gt, args.det)
+    compute_mAP(gt_folder, args.pred)
