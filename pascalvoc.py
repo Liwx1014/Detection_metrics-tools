@@ -9,6 +9,7 @@ import _init_paths
 import cv2
 import numpy as np
 from collections import defaultdict
+import io  # 确保导入io模块
 
 from BoundingBox import BoundingBox
 from BoundingBoxes import BoundingBoxes
@@ -31,6 +32,10 @@ def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, 
     # 创建输出目录
     error_dir = os.path.join(output_folder, f"{target_class}_error_analysis")
     os.makedirs(error_dir, exist_ok=True)
+    
+    # 创建结构化数据保存目录
+    structured_data_dir = os.path.join(output_folder, "structured_data")
+    os.makedirs(structured_data_dir, exist_ok=True)
     
     # 创建评估器并进行匹配
     evaluator = Evaluator()
@@ -108,6 +113,7 @@ def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, 
     
     # 处理所有样本
     processed = 0
+    structured_data = []  # 用于保存结构化数据
     for img_name, samples in error_samples.items():
         # 只处理包含错误的图片
         if not (samples['fp'] or samples['fn']):
@@ -148,9 +154,25 @@ def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, 
         cv2.putText(img, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         
         cv2.imwrite(os.path.join(error_dir, f"{img_name}.jpg"), img)
+        
+        # 添加结构化数据
+        structured_data.append({
+            "image_name": img_name,
+            "image_path": img_path,
+            "fp": [{"bbox": box, "confidence": conf} for box, conf in samples['fp']],
+            "fn": [{"bbox": box} for box in samples['fn']],
+            "original_xml_path": os.path.join(image_folder, img_name + '.xml')  # 假设XML文件与图片同名
+        })
+        
         processed += 1
     
+    # 将结构化数据保存到文件
+    structured_data_path = os.path.join(structured_data_dir, f"{target_class}_error_analysis.json")
+    with io.open(structured_data_path, 'w', encoding='utf-8') as f:
+        json.dump(structured_data, f, ensure_ascii=False, indent=4)
+    
     print(f"已保存 {processed} 张错误分析结果到 {error_dir}")
+    print(f"结构化数据已保存到 {structured_data_path}")
     print(f"图例说明：")
     print("- 绿色虚线框：真值标注(GT)")
     print("- 绿色实线框：正确检测(TP)")
