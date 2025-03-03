@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>查看错误分析</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #sidebar {
+            width: 250px;
+            border-right: 1px solid #333;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #2d2d2d;
+            color: #d4d4d4;
+        }
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow-y: auto;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        li a {
+            color: #61dafb;
+            text-decoration: none;
+        }
+        li a:hover {
+            text-decoration: underline;
+        }
+        img {
+            max-width: 100%;
+            max-height: 60vh;
+            border: 1px solid #444;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #61dafb;
+        }
+        h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #9cdcfe;
+        }
+        .navigation {
+            margin-top: 10px;
+        }
+        .navigation a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #61dafb;
+            font-size: 14px;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+        .label {
+            display: inline-block;
+            margin-right: 5px;
+            font-weight: bold;
+            color: #dcdcaa;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'a' || e.key === 'A') {
+                    window.location.href = "{{ url_for('view', json_file=json_file, index=(index - 1) % total) }}";
+                } else if (e.key === 'd' || e.key === 'D') {
+                    window.location.href = "{{ url_for('view', json_file=json_file, index=(index + 1) % total) }}";
+                } else if (e.key === 's' || e.key === 'S') {
+                    saveResults();
+                }
+            });
+
+            function saveResults() {
+                const fpSelections = [];
+                const fnSelections = [];
+                
+                {% for fp in item.fp %}
+                const fpChoice = document.querySelector('input[name="fp_{{ loop.index }}"]:checked').value;
+                fpSelections.push(fpChoice === 'keep');
+                {% endfor %}
+                
+                {% for fn in item.fn %}
+                const fnChoice = document.querySelector('input[name="fn_{{ loop.index }}"]:checked').value;
+                fnSelections.push(fnChoice === 'keep');
+                {% endfor %}
+                
+                fetch("{{ url_for('save', json_file=json_file, index=index) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fp: fpSelections, fn: fnSelections })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert('结果已保存！');
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>图片目录</h3>
+        <ul>
+            {% for i in range(total) %}
+            <li><a href="{{ url_for('view', json_file=json_file, index=i) }}">{{ data[i].image_name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="content">
+        <h1>查看错误分析</h1>
+        <h2>{{ item.image_name }}</h2>
+        <img src="{{ url_for('image', image_name=item.image_name) }}" alt="{{ item.image_name }}">
+        <p>误检 (FP):</p>
+        <ul>
+            {% for fp in item.fp %}
+            <li>
+                <span class="label">编号: FP-{{ loop.index }}</span> 边界框: {{ fp.bbox }}, 置信度: {{ fp.confidence }}
+                <label><input type="radio" name="fp_{{ loop.index }}" value="keep"> 保留</label>
+                <label><input type="radio" name="fp_{{ loop.index }}" value="delete" checked> 删除</label>
+            </li>
+            {% endfor %}
+        </ul>
+        <p>漏检 (FN):</p>
+        <ul>
+            {% for fn in item.fn %}
+            <li>
+                <span class="label">编号: FN-{{ loop.index }}</span> 边界框: {{ fn.bbox }}
+                <label><input type="radio" name="fn_{{ loop.index }}" value="keep" checked> 保留</label>
+                <label><input type="radio" name="fn_{{ loop.index }}" value="delete"> 删除</label>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="navigation">
+            <a href="{{ url_for('view', json_file=json_file, index=(index - 1) % total) }}">上一张</a>
+            <a href="{{ url_for('view', json_file=json_file, index=(index + 1) % total) }}">下一张</a>
+        </div>
+    </div>
+</body>
+</html> 
