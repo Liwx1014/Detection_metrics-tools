@@ -3,12 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>错误分析结果</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        async function modifyXMLs(jsonFile) {
+            try {
+                const response = await fetch('/modify_xmls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ json_file: jsonFile })
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    alert(`XML文件已成功修改：${jsonFile}`);
+                } else {
+                    alert(`修改XML文件时出错：${jsonFile}`);
+                }
+            } catch (error) {
+                alert('请求失败，请检查网络连接或服务器状态。');
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>错误分析结果</h1>
     <ul>
         {% for json_file in json_files %}
-        <li><a href="{{ url_for('view', json_file=json_file, index=0) }}">{{ json_file }}</a></li>
+        <li>
+            <a href="{{ url_for('view', json_file=json_file, index=0) }}">{{ json_file }}</a>
+            <button onclick="modifyXMLs('{{ json_file }}')">修改XML</button>
+        </li>
         {% endfor %}
     </ul>
 </body>

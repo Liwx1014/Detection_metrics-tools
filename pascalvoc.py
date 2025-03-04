@@ -27,7 +27,7 @@ def visualize_box(image, box, color, label, thickness=2):
     cv2.putText(image, label, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), thickness)
     return image
 
-def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, max_samples=100):
+def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, xml_folder, max_samples=100):
     """对指定类别进行错误分析并可视化"""
     # 创建输出目录
     error_dir = os.path.join(output_folder, f"{target_class}_error_analysis")
@@ -119,52 +119,49 @@ def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, 
         if not (samples['fp'] or samples['fn']):
             continue
             
-        if processed >= max_samples:
-            break
-            
-        img_path = os.path.join(image_folder, img_name + '.jpg')
-        if not os.path.exists(img_path):
-            img_path = os.path.join(image_folder, img_name + '.png')
-        if not os.path.exists(img_path):
-            continue
-            
-        img = cv2.imread(img_path)
-        if img is None:
-            continue
-            
-        # 先绘制GT框（绿色虚线）
-        for box in samples['gt']:
-            img = visualize_box(img, box, (0, 255, 0), "GT", 1)
-            
-        # 绘制TP框（绿色实线）
-        for box, conf in samples['tp']:
-            img = visualize_box(img, box, (0, 255, 0), f"TP:{conf:.2f}", 2)
-            
-        # 绘制FP框（红色）
-        for box, conf in samples['fp']:
-            img = visualize_box(img, box, (0, 0, 255), f"FP:{conf:.2f}", 2)
-            
-        # 绘制FN框（蓝色）
-        for box in samples['fn']:
-            img = visualize_box(img, box, (255, 0, 0), "FN", 2)
-            
-        # 在图片上添加错误统计信息
-        info_text = f"FP:{len(samples['fp'])} FN:{len(samples['fn'])} TP:{len(samples['tp'])}"
-        cv2.putText(img, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 4)
-        cv2.putText(img, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        
-        cv2.imwrite(os.path.join(error_dir, f"{img_name}.jpg"), img)
-        
         # 添加结构化数据
         structured_data.append({
             "image_name": img_name,
-            "image_path": img_path,
-            "fp": [{"bbox": box, "confidence": conf} for box, conf in samples['fp']],
-            "fn": [{"bbox": box} for box in samples['fn']],
-            "original_xml_path": os.path.join(image_folder, img_name + '.xml')  # 假设XML文件与图片同名
+            "image_path": os.path.join(image_folder, img_name + get_image_extension(image_folder, img_name)),
+            "fp": [{"bbox": box, "confidence": conf, "save": False} for box, conf in samples['fp']],
+            "fn": [{"bbox": box, "save": True} for box in samples['fn']],
+            "original_xml_path": os.path.join(xml_folder, img_name + '.xml'),  # 使用 xml_folder 而不是 image_folder
+            "class_name": target_class  # 添加 class_name 字段
         })
         
-        processed += 1
+        # 仅在未达到 max_samples 时保存可视化图片
+        if processed < max_samples:
+            img_path = os.path.join(image_folder, img_name + get_image_extension(image_folder, img_name))
+            if not os.path.exists(img_path):
+                continue
+                
+            img = cv2.imread(img_path)
+            if img is None:
+                continue
+                
+            # 先绘制GT框（绿色虚线）
+            for box in samples['gt']:
+                img = visualize_box(img, box, (0, 255, 0), "GT", 1)
+                
+            # 绘制TP框（绿色实线）
+            for box, conf in samples['tp']:
+                img = visualize_box(img, box, (0, 255, 0), f"TP:{conf:.2f}", 2)
+                
+            # 绘制FP框（红色）
+            for box, conf in samples['fp']:
+                img = visualize_box(img, box, (0, 0, 255), f"FP:{conf:.2f}", 2)
+                
+            # 绘制FN框（蓝色）
+            for box in samples['fn']:
+                img = visualize_box(img, box, (255, 0, 0), "FN", 2)
+                
+            # 在图片上添加错误统计信息
+            info_text = f"FP:{len(samples['fp'])} FN:{len(samples['fn'])} TP:{len(samples['tp'])}"
+            cv2.putText(img, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 4)
+            cv2.putText(img, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            
+            cv2.imwrite(os.path.join(error_dir, f"{img_name}.jpg"), img)
+            processed += 1
     
     # 将结构化数据保存到文件
     structured_data_path = os.path.join(structured_data_dir, f"{target_class}_error_analysis.json")
@@ -320,7 +317,7 @@ def getBoundingBoxesSingle(f,
     fh1.close()
     return allBoundingBoxes, allClasses
 
-def compute_mAP(gtFolder, detFolder, deep_analysis=None, image_folder=None, output_folder=None):
+def compute_mAP(gtFolder, detFolder, deep_analysis=None, image_folder=None, output_folder=None, xml_folder=None):
     # Get current path to set default folders
     try:
         currentPath = os.path.dirname(os.path.abspath(__file__))
@@ -376,10 +373,6 @@ def compute_mAP(gtFolder, detFolder, deep_analysis=None, image_folder=None, outp
 
             # Get metric values per each class
             cl = metricsPerClass['class']
-            if cl == "oil_tanker_truck":
-                continue
-            # if cl not in valClassNames:
-            #     continue
             ap = metricsPerClass['AP']
             precision = metricsPerClass['precision']
             recall = metricsPerClass['recall']
@@ -417,10 +410,23 @@ def compute_mAP(gtFolder, detFolder, deep_analysis=None, image_folder=None, outp
         
         # 如果开启深度分析，对指定类别进行分析
         if deep_analysis and image_folder and output_folder:
-            analyze_errors(allBoundingBoxes, image_folder, deep_analysis, output_folder)
+            if xml_folder is None:
+                print("错误：xml_folder 未在配置文件中设置")
+                sys.exit(1)
+            analyze_errors(allBoundingBoxes, image_folder, deep_analysis, output_folder, xml_folder)
         
     except:
         print(traceback.format_exc())
+
+def get_image_extension(folder_path, image_name):
+    """
+    查找给定图片名称的实际扩展名
+    支持常见图片格式：jpg, jpeg, png, bmp, etc.
+    """
+    for ext in ['.jpg', '.jpeg', '.png', '.bmp', '.JPG', '.JPEG', '.PNG', '.BMP']:
+        if os.path.exists(os.path.join(folder_path, image_name + ext)):
+            return ext
+    return '.jpg'  # 如果都没找到，返回默认值
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='计算目标检测的mAP指标')
@@ -445,6 +451,7 @@ if __name__ == '__main__':
     # 获取项目名称和图片路径
     project_name = config.get('project_name', 'default')
     image_folder = config['paths']['image_folder'] if args.deep_analysis else None
+    xml_folder = config['paths'].get('xml_folder')  # 确保从 paths 中获取 xml_folder
     
     # 设置路径
     gt_folder = args.gt if args.gt else os.path.join('./datasets', project_name, 'gt')
@@ -463,4 +470,4 @@ if __name__ == '__main__':
         print(f"错误：真值标注文件夹 {gt_folder} 不存在")
         sys.exit(1)
         
-    compute_mAP(gt_folder, args.pred, args.deep_analysis, image_folder, vis_dir)
+    compute_mAP(gt_folder, args.pred, args.deep_analysis, image_folder, vis_dir, xml_folder)

@@ -3,8 +3,14 @@ import os
 import json
 import argparse
 import cv2
+import xml.etree.ElementTree as ET
+import logging
+import subprocess
 
 app = Flask(__name__)
+
+# 设置日志记录
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 使用 argparse 从命令行获取 JSON 文件目录
 def parse_args():
@@ -15,6 +21,8 @@ def parse_args():
 # 获取命令行参数
 args = parse_args()
 JSON_DIR = args.json_dir
+MODIFIED_XML_DIR = os.path.join(JSON_DIR, 'modified_xmls')
+os.makedirs(MODIFIED_XML_DIR, exist_ok=True)
 
 @app.route('/')
 def index():
@@ -43,6 +51,10 @@ def image(image_name):
     # 从 JSON 数据中提取图片路径
     for json_file in os.listdir(JSON_DIR):
         json_path = os.path.join(JSON_DIR, json_file)
+        # 确保 json_path 是一个文件路径
+        if not os.path.isfile(json_path):
+            continue
+        
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             for item in data:
@@ -91,13 +103,31 @@ def save(json_file, index):
     
     # 更新数据
     for i, fp in enumerate(data[index]['fp']):
-        fp['save'] = user_data['fp'][i]
+        # 确保 user_data['fp'][i] 是布尔值
+        fp['save'] = bool(user_data['fp'][i])
     for i, fn in enumerate(data[index]['fn']):
-        fn['save'] = user_data['fn'][i]
+        # 确保 user_data['fn'][i] 是布尔值
+        fn['save'] = bool(user_data['fn'][i])
     
     # 保存更新后的数据
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    return jsonify({"status": "success"})
+
+@app.route('/modify_xmls', methods=['POST'])
+def modify_xmls():
+    # 获取请求中的JSON文件名
+    json_file = request.json.get('json_file')
+    if not json_file:
+        return jsonify({"status": "error", "message": "No JSON file specified"}), 400
+    
+    json_path = os.path.join(JSON_DIR, json_file)
+    if not os.path.exists(json_path):
+        return jsonify({"status": "error", "message": "JSON file not found"}), 404
+    
+    # 调用 modify_xmls.py 脚本
+    subprocess.run(['python', 'modify_xmls.py', '--json', json_path, '--xml-dir', MODIFIED_XML_DIR])
     
     return jsonify({"status": "success"})
 

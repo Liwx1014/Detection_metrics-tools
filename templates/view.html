@@ -67,12 +67,18 @@
         }
         .navigation a {
             margin: 0 5px;
-            text-decoration: none;
-            color: #61dafb;
+            padding: 10px 20px;
             font-size: 14px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
         .navigation a:hover {
-            text-decoration: underline;
+            background-color: #0056b3;
         }
         .label {
             display: inline-block;
@@ -80,20 +86,64 @@
             font-weight: bold;
             color: #dcdcaa;
         }
+        .modify-xml-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modify-xml-button:hover {
+            background-color: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 30px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.3s ease-in-out;
+        }
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
+        document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'a' || e.key === 'A') {
                     window.location.href = "{{ url_for('view', json_file=json_file, index=(index - 1) % total) }}";
                 } else if (e.key === 'd' || e.key === 'D') {
                     window.location.href = "{{ url_for('view', json_file=json_file, index=(index + 1) % total) }}";
-                } else if (e.key === 's' || e.key === 'S') {
-                    saveResults();
                 }
             });
 
-            function saveResults() {
+            // 自动保存更改
+            function autoSave() {
                 const fpSelections = [];
                 const fnSelections = [];
                 
@@ -117,10 +167,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        alert('结果已保存！');
+                        console.log('自动保存成功');
+                    } else {
+                        console.error('自动保存失败');
                     }
                 });
             }
+
+            // 监听"保留"和"删除"选项的变化
+            document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+                radio.addEventListener('change', autoSave);
+            });
         });
     </script>
 </head>
@@ -142,8 +199,8 @@
             {% for fp in item.fp %}
             <li>
                 <span class="label">编号: FP-{{ loop.index }}</span> 边界框: {{ fp.bbox }}, 置信度: {{ fp.confidence }}
-                <label><input type="radio" name="fp_{{ loop.index }}" value="keep"> 保留</label>
-                <label><input type="radio" name="fp_{{ loop.index }}" value="delete" checked> 删除</label>
+                <label><input type="radio" name="fp_{{ loop.index }}" value="keep" {% if fp.save is defined and fp.save %}checked{% endif %}> 保留</label>
+                <label><input type="radio" name="fp_{{ loop.index }}" value="delete" {% if fp.save is not defined or not fp.save %}checked{% endif %}> 删除</label>
             </li>
             {% endfor %}
         </ul>
@@ -152,14 +209,15 @@
             {% for fn in item.fn %}
             <li>
                 <span class="label">编号: FN-{{ loop.index }}</span> 边界框: {{ fn.bbox }}
-                <label><input type="radio" name="fn_{{ loop.index }}" value="keep" checked> 保留</label>
-                <label><input type="radio" name="fn_{{ loop.index }}" value="delete"> 删除</label>
+                <label><input type="radio" name="fn_{{ loop.index }}" value="keep" {% if fn.save is defined and fn.save %}checked{% endif %}> 保留</label>
+                <label><input type="radio" name="fn_{{ loop.index }}" value="delete" {% if fn.save is not defined or not fn.save %}checked{% endif %}> 删除</label>
             </li>
             {% endfor %}
         </ul>
         <div class="navigation">
-            <a href="{{ url_for('view', json_file=json_file, index=(index - 1) % total) }}">上一张</a>
-            <a href="{{ url_for('view', json_file=json_file, index=(index + 1) % total) }}">下一张</a>
+            <a href="{{ url_for('view', json_file=json_file, index=(index - 1) % total) }}">上一张(A)</a>
+            <a href="{{ url_for('view', json_file=json_file, index=(index + 1) % total) }}">下一张(D)</a>
+            <a href="{{ url_for('index') }}" class="navigation">返回主页</a>
         </div>
     </div>
 </body>
