@@ -429,7 +429,7 @@ def get_image_extension(folder_path, image_name):
     return '.jpg'  # 如果都没找到，返回默认值
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='计算目标检测的mAP指标')
+    parser = argparse.ArgumentParser(description='计算目标检测的mAP指标, python pascalvoc.py -g datasets/12class/gt -p datasets/12class/pred  -c projects/12class.yaml --deep-analysis tower_crane')
     parser.add_argument('-p', '--pred', type=str, required=True, help='检测结果文件夹路径，包含txt格式的检测结果')
     parser.add_argument('-g', '--gt', type=str, help='真值标注文件夹路径，包含txt格式的标注文件')
     parser.add_argument('-c', '--config', type=str, required=True, help='配置文件路径，例如：projects/12class.yaml')
