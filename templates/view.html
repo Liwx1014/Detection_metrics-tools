@@ -51,6 +51,8 @@
             max-height: 60vh;
             border: 1px solid #444;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            cursor: pointer; /* 添加鼠标指针样式 */
+            transition: transform 0.3s ease-in-out; /* 添加过渡效果 */
         }
         h1 {
             font-size: 24px;
@@ -148,13 +150,13 @@
                 const fnSelections = [];
                 
                 {% for fp in item.fp %}
-                const fpChoice = document.querySelector('input[name="fp_{{ loop.index }}"]:checked').value;
-                fpSelections.push(fpChoice === 'keep');
+                const fpChoice{{ loop.index }} = document.querySelector('input[name="fp_{{ loop.index }}"]:checked').value;
+                fpSelections.push(fpChoice{{ loop.index }} === 'keep');
                 {% endfor %}
                 
                 {% for fn in item.fn %}
-                const fnChoice = document.querySelector('input[name="fn_{{ loop.index }}"]:checked').value;
-                fnSelections.push(fnChoice === 'keep');
+                const fnChoice{{ loop.index }} = document.querySelector('input[name="fn_{{ loop.index }}"]:checked').value;
+                fnSelections.push(fnChoice{{ loop.index }} === 'keep');
                 {% endfor %}
                 
                 fetch("{{ url_for('save', json_file=json_file, index=index) }}", {
@@ -178,6 +180,83 @@
             document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
                 radio.addEventListener('change', autoSave);
             });
+
+            // 添加点击图片放大和再次点击还原的功能
+            window.onload = function() {
+                const images = document.querySelectorAll('img');
+                images.forEach(image => {
+                    let isZoomed = false;
+                    let startX = 0;
+                    let startY = 0;
+
+                    image.addEventListener('click', function(event) {
+                        if (isZoomed) {
+                            // 如果已经放大，还原图片
+                            image.style.transform = 'scale(1)';
+                            image.style.transformOrigin = 'center center';
+                            isZoomed = false;
+                        } else {
+                            // 如果没有放大，放大图片
+                            const rect = image.getBoundingClientRect();
+                            const x = event.clientX - rect.left;
+                            const y = event.clientY - rect.top;
+                            startX = x;
+                            startY = y;
+
+                            image.style.transform = 'scale(2)';
+                            image.style.transformOrigin = `${x}px ${y}px`;
+                            isZoomed = true;
+                        }
+                    });
+                });
+            };
+
+            // 打印失败的原因
+            function printFailureReason(image) {
+                if (!image.complete) {
+                    console.error('图片未加载完成:', image.src);
+                }
+                if (image.naturalWidth === 0 || image.naturalHeight === 0) {
+                    console.error('图片尺寸无效:', image.src);
+                }
+                if (window.getComputedStyle(image).display === 'none') {
+                    console.error('图片被隐藏:', image.src);
+                }
+                if (window.getComputedStyle(image).visibility === 'hidden') {
+                    console.error('图片不可见:', image.src);
+                }
+                if (window.getComputedStyle(image).position === 'fixed' || window.getComputedStyle(image).position === 'absolute') {
+                    console.error('图片位置可能被遮挡:', image.src);
+                }
+            }
+
+            // 监听图片点击事件
+            window.onload = function() {
+                const images = document.querySelectorAll('img');
+                images.forEach(image => {
+                    image.addEventListener('click', function(event) {
+                        if (image.style.transform === 'scale(2)') {
+                            // 如果已经放大，还原图片
+                            image.style.transform = 'scale(1)';
+                            image.style.transformOrigin = 'center center';
+                        } else {
+                            // 如果没有放大，放大图片
+                            const rect = image.getBoundingClientRect();
+                            const x = event.clientX - rect.left;
+                            const y = event.clientY - rect.top;
+                            image.style.transform = 'scale(2)';
+                            image.style.transformOrigin = `${x}px ${y}px`;
+                        }
+                    });
+
+                    // 打印失败的原因
+                    image.addEventListener('click', function() {
+                        if (image.style.transform === 'scale(2)') {
+                            printFailureReason(image);
+                        }
+                    });
+                });
+            };
         });
     </script>
 </head>
@@ -221,4 +300,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

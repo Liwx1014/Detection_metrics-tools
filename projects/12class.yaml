@@ -1,6 +1,30 @@
 project_name: "12class"
 
-label_mapping:
+transform_mapping:
+  1: "fire"
+  2: "smoke"
+  3: "nest"
+  4: "dxyw"
+  5: "coated_steel_sheet"
+  6: "dustproof_net"
+  7: "tower_crane"
+  8: "truck_crane"
+  9: "bulldozer"
+  10: "pump_truck"
+  11: "cement_mixer_truck"
+  12: "truck"
+  13: "excavator"
+  14: "greenhouse"
+  15: "tarpaulin"
+  16: "piling_rig"
+  17: "piling_rig_b"
+  18: "piling_rig_c"   
+  19: "oil_tanker_truck"
+  20: "truck_crane_b"
+  21: "sgjx"
+  22: "roller"
+
+yolo_mapping:
   0: "fire"
   1: "smoke"
   2: "nest"
@@ -14,20 +38,54 @@ label_mapping:
   10: "excavator"
   11: "piling_rig"
 
-paths:
-  image_folder: "/data1/datasets/shudian_2025/images/test/"
-  xml_folder: "/data1/datasets/shudian_2025/annotations/test/"
+cls_score_thre:
+  fire: 0.4  # fire
+  smoke: 0.25  # smoke
+  nest: 0.4  # nest
+  dxyw: 0.25  # dxyw
+  coated_steel_sheet: 0.4  # coated_steel_sheet
+  dustproof_net: 0.4  # dustproof_net
+  tower_crane: 0.5  # tower_crane
+  truck_crane: 0.5  # truck_crane
+  bulldozer: 0.5  # bulldozer
+  pump_truck: 0.5 # pump_truck
+  cement_mixer_truck: 0.5
+  truck: 0.5 # truck
+  excavator: 0.5 # excavator
+  greenhouse: 0.4 # greenhouse
+  tarpaulin: 0.4 # tarpaulin
+  piling_rig: 0.5 # piling_rig
+  piling_rig_b: 0.5
+  piling_rig_c: 0.5
+  oil_tanker_truck: 0.5 # oil_tanker_truck
+  truck_crane_b: 0.5
+  sgjx: 0.5
+  roller: 0.5
 
+cls_need_merge: 
+
+paths:
+  image_folder: "/data1/datasets/shudian_2025/images/train/"
+  xml_folder: "/data1/datasets/shudian_2025/annotations/train/"
+
+model_path: "./model/dfine/core/checkpoints/best_stg2.pth"
+model_config: "./model/dfine/core/config/dfine/dfine_hgnetv2_x_coco.yml"
+xml_save_path: "./result_xmls/"
 
 class_mapping:
   piling_rig_b: "sgjx"
   fandouche: "truck"
+  construction_machinery: sgjx
   oil_tanker_truck: "truck"
   cement_mixer_truck: "truck"
   truck_crane_b: "truck"
   roller: "bulldozer"
   long_excavator: "excavator"
   piling_rig_c: "piling_rig"
+  coated_steel_sheet:
+  dustproof_net:
+  greenhouse:
+  tarpaulin:
 
 # 添加标签尺寸过滤阈值配置
 filter_size:

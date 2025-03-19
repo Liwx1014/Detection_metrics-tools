@@ -1,0 +1,36 @@
+use_amp: True # 启用自动混合精度（Automatic Mixed Precision, AMP）训练，这有助于提高训练速度和减少内存使用。
+use_ema: True # 启用模型指数移动平均（Exponential Moving Average, EMA），这是一种技术，用于平滑模型权重，通常可以提高模型的泛化能力。
+ema:
+  type: ModelEMA
+  decay: 0.9999 # EMA的衰减率
+  warmups: 1000 
+  start: 0  # 从训练的第0个epoch开始计算EMA。
+
+
+epoches: 72  # 总的训练周期数。
+clip_max_norm: 0.1 # 梯度裁剪的最大范数，用于防止梯度爆炸。
+
+
+optimizer:
+  type: AdamW
+  params:
+    -
+      params: '^(?=.*backbone)(?!.*norm).*$'  # 包含backbone但不包含norm的参数
+      lr: 0.0000125
+    -
+      params: '^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$' # 包含encoder或decoder且包含norm或bn（批量归一化）的参数，不应用权重衰减。
+      weight_decay: 0.
+
+  lr: 0.00025  # 全局学习率。
+  betas: [0.9, 0.999]  # Adam优化器的两个beta参数。
+  weight_decay: 0.000125  # 全局权重衰减率。
+
+
+lr_scheduler:
+  type: MultiStepLR # 学习率调度器类型，这里使用的是多步学习率调度器
+  milestones: [500] # 在训练的第500个epoch降低学习率。
+  gamma: 0.1  # 将学习率乘以 gamma
+
+lr_warmup_scheduler:
+  type: LinearWarmup  # 学习率预热调度器类型，这里使用的是线性预热。
+  warmup_duration: 500 # 预热期持续的迭代次数

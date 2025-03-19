@@ -7,12 +7,6 @@ import yaml
 import argparse
 import sys
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Convert XML annotations to ground truth txt files')
-    parser.add_argument('-c', '--config', type=str, required=True, help='配置文件路径，例如：projects/12class.yaml')
-    parser.add_argument('-o', '--output', type=str, help='输出文件夹路径，默认为 ./datasets/{project_name}/gt')
-    return parser.parse_args()
-
 def convert(size, box):  # size:(原图w,原图h) , box:(xmin,xmax,ymin,ymax)
     dw = 1. / size[0]  # 1/w
     dh = 1. / size[1]  # 1/h
@@ -26,11 +20,9 @@ def convert(size, box):  # size:(原图w,原图h) , box:(xmin,xmax,ymin,ymax)
     h = min(max(h * dh, 0), 1)  # 物体宽度的宽度比(相当于 h/原图h)
     return (x, y, w, h)  # 返回 相对于原图的物体中心点的x坐标比,y坐标比,宽度比,高度比,取值范围[0-1]
 
-def main():
-    args = parse_args()
-    
+def generate_gt(args):
     # 读取配置文件
-    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), args.config)
+    config_path = args.config_path
     if not os.path.exists(config_path):
         print(f"错误：配置文件 {config_path} 不存在")
         sys.exit(1)
@@ -42,10 +34,13 @@ def main():
     project_name = config.get('project_name', 'default')
     
     # 获取配置信息
-    label_mapping = config['label_mapping']
+    if args.model == "yolo":
+        label_mapping = config['yolo_mapping']
+    else:
+        label_mapping = config['transform_mapping']
     image_folder = config['paths']['image_folder']
     xml_folder = config['paths']['xml_folder']
-    gt_folder = args.output if args.output else os.path.join('./datasets', project_name, 'gt')
+    gt_folder = args.gt_output if args.gt_output else os.path.join('./datasets', project_name, 'gt')
     class_mapping = config['class_mapping']
     
     # 获取标签尺寸过滤阈值
@@ -109,10 +104,11 @@ def main():
                         
                     # 处理类别映射
                     if class_name in class_mapping:
-                        class_name = class_mapping[class_name]
-                        
+                        new_class_name = class_mapping[class_name]
+                    else:
+                        new_class_name = class_name
                     # 如果类别不在有效类别列表中，则忽略
-                    if class_name not in valid_classes:
+                    if new_class_name not in valid_classes:
                         unuse_numbers += 1
                         if class_name not in unuse_classes:
                             unuse_classes[class_name] = 1
@@ -143,12 +139,12 @@ def main():
                     x2 = min(max(box[2], 0), w)
                     y2 = min(max(box[3], 0), h)
                     
-                    out_f.write(f"{class_name} {x1} {y1} {x2} {y2}\n")
-                    
-                    if class_name not in new_classes:
-                        new_classes[class_name] = 1
-                    else:
-                        new_classes[class_name] += 1
+                    out_f.write(f"{new_class_name} {x1} {y1} {x2} {y2}\n")
+                    if new_class_name is not None:
+                        if new_class_name not in new_classes:
+                            new_classes[new_class_name] = 1
+                        else:
+                            new_classes[new_class_name] += 1
 
     # 打印统计信息
     print(f"总标注数量: {all_numbers}")

@@ -6,6 +6,9 @@ __pycache__/
 datasets/
 # C extensions
 *.so
+*.pt
+*.pth
+model/dfine/core/data/
 
 # Distribution / packaging
 .Python
