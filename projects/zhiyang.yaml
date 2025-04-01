@@ -1,4 +1,4 @@
-project_name: "12class"
+project_name: "zhiyang"
 
 transform_mapping:
   1: "fire"
@@ -25,18 +25,42 @@ transform_mapping:
   22: "roller"
 
 yolo_mapping:
-  0: "fire"
-  1: "smoke"
-  2: "nest"
-  3: "dxyw"
-  4: "sgjx"
-  5: "tower_crane"
-  6: "truck_crane"
-  7: "bulldozer"
-  8: "pump_truck"
-  9: "truck"
-  10: "excavator"
-  11: "piling_rig"
+  0: motocrane
+  1: motocrane_dontwork
+  2: motocrane_nets
+  3: towercrane
+  4: pumpcar
+  5: pumpcar_dontwork
+  6: pushdozer
+  7: truck
+  8: digger
+  9: fire
+  10: smog
+  11: chimney_smog
+  12: colorbelts
+  13: dustproof
+  14: cementmixer
+  15: pilingmachine
+  16: van
+  17: trailer
+  18: smalltruck
+  19: roller
+  20: windmill
+  21: bird
+  22: dapeng
+  23: dapeng_broken
+  24: caigangwa
+  25: caigangwa_broken
+  26: pengbu
+  27: dustproof_broken
+  28: pengbu_youli
+  29: dustproof_youli
+  30: film
+  31: film_broken
+  32: film_youli
+  33: qita
+  34: caiqi
+  35: jianzhufanghuwang
 
 cls_score_thre:
   fire: 0.4  # fire
@@ -73,7 +97,24 @@ model_config: "./model/dfine/core/config/dfine/dfine_hgnetv2_x_coco.yml"
 xml_save_path: "./result_xmls/"
 
 class_mapping:
-  piling_rig_b: "sgjx"
+  motocrane: "truck_crane" # yolo输出映射修改
+  motocrane_dontwork: "truck"
+  motocrane_nets: "truck_crane"
+  towercrane: "tower_crane"
+  pumpcar: "pump_truck"
+  pumpcar_dontwork: "truck"
+  pushdozer: "bulldozer"
+  digger: "excavator"
+  smog: "smoke"
+  chimney_smog: "smoke"
+  colorbelts: "dxyw"
+  cementmixer: "truck"
+  pilingmachine: "piling_rig"
+  van: "truck"
+  trailer: "truck"
+  smalltruck: "truck"
+  roller: "bulldozer"
+  piling_rig_b: "sgjx" # 标签修改
   fandouche: "truck"
   construction_machinery: sgjx
   oil_tanker_truck: "truck"
@@ -86,6 +127,20 @@ class_mapping:
   dustproof_net:
   greenhouse:
   tarpaulin:
+
+# 执行xml的转换列表，为空时使用yolo_mapping的key值
+valid_list:
+  - "fire"
+  - "smoke"
+  - "dxyw"
+  - "tower_crane"
+  - "truck_crane"
+  - "bulldozer"
+  - "pump_truck"
+  - "truck"
+  - "excavator"
+  - "piling_rig"
+
 
 # 添加标签尺寸过滤阈值配置
 filter_size:

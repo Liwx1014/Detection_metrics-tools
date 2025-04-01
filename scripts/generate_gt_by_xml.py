@@ -49,7 +49,10 @@ def generate_gt(args):
     min_edge = filter_config.get('min_edge', 0)  # 默认为0表示不过滤
     
     # 获取所有有效的类别（label_mapping中定义的类别）
-    valid_classes = set(label_mapping.values())
+    if 'valid_list' in config and config['valid_list']:
+        valid_classes = config['valid_list']
+    else:
+        valid_classes = set(label_mapping.values())
 
     if os.path.exists(gt_folder):
         shutil.rmtree(gt_folder)

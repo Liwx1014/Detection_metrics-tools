@@ -9,6 +9,7 @@ import sys
 import argparse
 import yaml
 from model.yolov8.ultralytics import YOLO
+# from ultralytics import YOLO
 from tqdm import tqdm
 
 def generate_pred(args):
@@ -40,6 +41,11 @@ def generate_pred(args):
     
     # 获取标签映射
     label_mapping = {str(k): v for k, v in config['yolo_mapping'].items()}
+    class_mapping = {str(k): v for k, v in config['class_mapping'].items()}
+    if 'valid_list' in config and config['valid_list']:
+        valid_classes = config['valid_list']
+    else:
+        valid_classes = set(label_mapping.values())
     
     # 运行预测
     print(f"正在处理图片目录: {image_folder}")
@@ -58,8 +64,10 @@ def generate_pred(args):
                     x1, y1, x2, y2 = box
                     # 使用label_mapping获取类别名称
                     class_name = label_mapping[str(int(label))]
-                    result_str = f"{class_name} {score:.3f} {int(x1)} {int(y1)} {int(x2)} {int(y2)}\n"
-                    f.write(result_str)
+                    class_name = class_mapping[class_name] if class_name in class_mapping.keys() else class_name # 将yolo输出的name，再做合并转换
+                    if class_name in valid_classes:
+                        result_str = f"{class_name} {score:.3f} {int(x1)} {int(y1)} {int(x2)} {int(y2)}\n"
+                        f.write(result_str)
     
     print("预测完成！")
 
