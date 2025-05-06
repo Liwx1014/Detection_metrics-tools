@@ -38,11 +38,14 @@ import os
 import xml.etree.ElementTree as ET
 import argparse
 from tqdm import tqdm
+import xml.dom.minidom
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Modify XML files based on JSON input")
-    parser.add_argument('-j', '--json', required=True, help='Path to the JSON file')
-    parser.add_argument('-x', '--xml-dir', required=True, help='Directory to save modified XML files')
+    parser.add_argument('-j', '--json', required=True, help='结构化json的路径')
+    parser.add_argument('-x', '--xml-dir', required=True, help='xml文件夹保存路径')
     return parser.parse_args()
+
 
 def modify_xml(json_data, xml_dir):
     for item in tqdm(json_data):
@@ -82,21 +85,36 @@ def modify_xml(json_data, xml_dir):
         for fp_item in fp:
             if fp_item['save']:
                 fp_bbox = fp_item['bbox']
-                obj = ET.SubElement(root, 'object')
+                obj = ET.Element('object')
                 ET.SubElement(obj, 'name').text = class_name
                 bndbox = ET.SubElement(obj, 'bndbox')
                 ET.SubElement(bndbox, 'xmin').text = str(fp_bbox[0])
                 ET.SubElement(bndbox, 'ymin').text = str(fp_bbox[1])
                 ET.SubElement(bndbox, 'xmax').text = str(fp_bbox[2])
                 ET.SubElement(bndbox, 'ymax').text = str(fp_bbox[3])
+                root.append(obj)
                 need_save = True
 
         # 只有在需要保存时才写入新的XML文件
         if need_save:
             modified_xml_path = os.path.join(xml_dir, f"{image_name}.xml")
-            # 确保目录存在
             os.makedirs(os.path.dirname(modified_xml_path), exist_ok=True)
-            tree.write(modified_xml_path, encoding='utf-8', xml_declaration=True)
+            # 先去除所有节点的多余空白
+            remove_whitespace_nodes(root)
+            # 用 minidom 重新格式化输出
+            xml_str = ET.tostring(root, encoding='utf-8')
+            dom = xml.dom.minidom.parseString(xml_str)
+            with open(modified_xml_path, 'w', encoding='utf-8') as f:
+                f.write(dom.toprettyxml(indent="  ", newl="\n"))
+
+def remove_whitespace_nodes(elem):
+    # 清除所有节点的text和tail中的纯空白
+    if elem.text is not None and elem.text.strip() == '':
+        elem.text = None
+    if elem.tail is not None and elem.tail.strip() == '':
+        elem.tail = None
+    for child in elem:
+        remove_whitespace_nodes(child)
 
 def main():
     args = parse_args()

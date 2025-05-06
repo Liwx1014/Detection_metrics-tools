@@ -8,8 +8,8 @@ import os
 import sys
 import argparse
 import yaml
-from model.yolov8.ultralytics import YOLO
-# from ultralytics import YOLO
+# from model.yolov8.ultralytics import YOLO
+from ultralytics import YOLO
 from tqdm import tqdm
 
 def generate_pred(args):

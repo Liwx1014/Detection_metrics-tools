@@ -1,0 +1,68 @@
+project_name: "sgjx"
+
+transform_mapping:
+  1: "fire"
+  2: "smoke"
+  3: "chimney_smog"
+  4: "tower_crane"
+  5: "truck_crane"
+  6: "truck_crane_b"
+  7: "pump_truck"
+  8: "pump_truck_b"
+  9: "bulldozer"
+  10: "roller"
+  11: "fandouche"
+  12: "smalltruck"
+  13: "trailer"
+  14: "van"
+  15: "oil_tanker_truck"
+  16: "cement_mixer_truck"
+  17: "excavator"
+  18: "piling_rig"   
+
+
+yolo_mapping:
+  
+
+cls_score_thre:
+  fire: 0.4  # fire
+  smoke: 0.4  # smoke
+  chimney_smog: 0.4  # 
+  tower_crane: 0.4 # 
+  truck_crane: 0.4  # 
+  truck_crane_b: 0.4  # 
+  pump_truck: 0.5  # 
+  pump_truck_b: 0.5  # 
+  bulldozer: 0.5  # 
+  roller: 0.5 # 
+  fandouche: 0.5
+  smalltruck: 0.5 # 
+  trailer: 0.5 # 
+  van: 0.4 # 
+  oil_tanker_truck: 0.4 # 
+  cement_mixer_truck: 0.5 # 
+  excavator: 0.5
+  piling_rig: 0.5
+
+
+cls_need_merge: 
+
+paths:
+  image_folder: "/data1/datasets/shudian_2025/images/test/"
+  xml_folder: "/data1/datasets/shudian_2025/annotations/test/"
+
+model_path: "./model/dfine/core/out_0425/last.pth"
+model_config: "./model/dfine/core/configs_0425/dfine/custom/dfine_hgnetv2_x_custom.yml"
+xml_save_path: "./result_xmls/"
+
+class_mapping:
+  piling_rig_b: "piling_rig"
+  piling_rig_c: "piling_rig"
+
+
+
+# 添加标签尺寸过滤阈值配置
+filter_size:
+  min_size: 16  # 长宽同时小于此值的标签将被过滤
+  min_edge: 4   # 任一边小于此值的标签将被过滤
+  
