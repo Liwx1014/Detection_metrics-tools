@@ -48,47 +48,49 @@ def view(json_file, index):
 
 @app.route('/image/<image_name>')
 def image(image_name):
-    # 从 JSON 数据中提取图片路径
-    for json_file in os.listdir(JSON_DIR):
-        json_path = os.path.join(JSON_DIR, json_file)
-        # 确保 json_path 是一个文件路径
-        if not os.path.isfile(json_path):
-            continue
+    # 从请求中获取当前选中的JSON文件名
+    json_file = request.args.get('json_file')
+    if not json_file:
+        return "JSON file not specified", 400
         
-        with open(json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            for item in data:
-                if item['image_name'] == image_name:
-                    image_path = item['image_path']
-                    if os.path.exists(image_path):
-                        # 读取图片
-                        img = cv2.imread(image_path)
-                        # 绘制 FP 框
-                        for idx, fp in enumerate(item['fp']):
-                            x1, y1, x2, y2 = map(int, fp['bbox'])
-                            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                            # 计算文字背景
-                            text = f"FP-{idx+1}"
-                            (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-                            # 确保文字框在图片范围内
-                            text_y = y1 - text_height - 5 if y1 - text_height - 5 > 0 else y1 + text_height + 5
-                            cv2.rectangle(img, (x1, text_y - text_height), (x1 + text_width, text_y), (0, 0, 255), -1)
-                            cv2.putText(img, text, (x1, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-                        # 绘制 FN 框
-                        for idx, fn in enumerate(item['fn']):
-                            x1, y1, x2, y2 = map(int, fn['bbox'])
-                            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                            # 计算文字背景
-                            text = f"FN-{idx+1}"
-                            (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-                            # 确保文字框在图片范围内
-                            text_y = y1 - text_height - 5 if y1 - text_height - 5 > 0 else y1 + text_height + 5
-                            cv2.rectangle(img, (x1, text_y - text_height), (x1 + text_width, text_y), (255, 0, 0), -1)
-                            cv2.putText(img, text, (x1, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-                        # 保存临时图片
-                        temp_image_path = f"/tmp/{image_name}.jpg"
-                        cv2.imwrite(temp_image_path, img)
-                        return send_file(temp_image_path)
+    json_path = os.path.join(JSON_DIR, json_file)
+    if not os.path.exists(json_path):
+        return "JSON file not found", 404
+    
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        for item in data:
+            if item['image_name'] == image_name:
+                image_path = item['image_path']
+                if os.path.exists(image_path):
+                    # 读取图片
+                    img = cv2.imread(image_path)
+                    # 绘制 FP 框
+                    for idx, fp in enumerate(item['fp']):
+                        x1, y1, x2, y2 = map(int, fp['bbox'])
+                        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                        # 计算文字背景
+                        text = f"FP-{idx+1}"
+                        (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+                        # 确保文字框在图片范围内
+                        text_y = y1 - text_height - 5 if y1 - text_height - 5 > 0 else y1 + text_height + 5
+                        cv2.rectangle(img, (x1, text_y - text_height), (x1 + text_width, text_y), (0, 0, 255), -1)
+                        cv2.putText(img, text, (x1, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                    # 绘制 FN 框
+                    for idx, fn in enumerate(item['fn']):
+                        x1, y1, x2, y2 = map(int, fn['bbox'])
+                        cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                        # 计算文字背景
+                        text = f"FN-{idx+1}"
+                        (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+                        # 确保文字框在图片范围内
+                        text_y = y1 - text_height - 5 if y1 - text_height - 5 > 0 else y1 + text_height + 5
+                        cv2.rectangle(img, (x1, text_y - text_height), (x1 + text_width, text_y), (255, 0, 0), -1)
+                        cv2.putText(img, text, (x1, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                    # 保存临时图片
+                    temp_image_path = f"/tmp/{image_name}.jpg"
+                    cv2.imwrite(temp_image_path, img)
+                    return send_file(temp_image_path)
     return "Image not found", 404
 
 @app.route('/save/<json_file>/<int:index>', methods=['POST'])

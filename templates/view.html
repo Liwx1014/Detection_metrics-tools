@@ -286,7 +286,7 @@
     <div id="content">
         <h1>查看错误分析</h1>
         <h2>{{ item.image_name }}</h2>
-        <img src="{{ url_for('image', image_name=item.image_name) }}" alt="{{ item.image_name }}">
+        <img src="{{ url_for('image', image_name=item.image_name, json_file=json_file) }}" alt="{{ item.image_name }}">
         <p>误检 (FP):</p>
         <ul>
             {% for fp in item.fp %}
