@@ -27,7 +27,7 @@ def visualize_box(image, box, color, label, thickness=2):
     cv2.putText(image, label, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), thickness)
     return image
 
-def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, xml_folder, max_samples=100):
+def analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, xml_folder, max_samples=5000):
     """对指定类别进行错误分析并可视化"""
     # 创建输出目录
     error_dir = os.path.join(output_folder, f"{target_class}_error_analysis")
@@ -413,7 +413,15 @@ def compute_mAP(gtFolder, detFolder, deep_analysis=None, image_folder=None, outp
             if xml_folder is None:
                 print("错误：xml_folder 未在配置文件中设置")
                 sys.exit(1)
-            analyze_errors(allBoundingBoxes, image_folder, deep_analysis, output_folder, xml_folder)
+            if len(deep_analysis)>1:
+                for target_class in deep_analysis:
+                    assert target_class in allClasses, f"错误：类别 '{target_class}' 不存在于检测结果中"
+                    analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, xml_folder)
+            elif deep_analysis[0] == "all":
+                for target_class in allClasses:
+                    analyze_errors(allBoundingBoxes, image_folder, target_class, output_folder, xml_folder)
+            else:
+                analyze_errors(allBoundingBoxes, image_folder, deep_analysis[0], output_folder, xml_folder)
         
     except:
         print(traceback.format_exc())
@@ -429,12 +437,12 @@ def get_image_extension(folder_path, image_name):
     return '.jpg'  # 如果都没找到，返回默认值
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='计算目标检测的mAP指标, python pascalvoc.py -g datasets/12class/gt -p datasets/12class/pred  -c projects/12class.yaml --deep-analysis tower_crane')
+    parser = argparse.ArgumentParser(description='计算目标检测的mAP指标, python pascalvoc.py -g datasets/yiwu_6cls/gt -p datasets/yiwu_6cls/deim_pred  -c projects/yiwu_6cls.yaml --deep-analysis tower_crane')
     parser.add_argument('-p', '--pred', type=str, required=True, help='检测结果文件夹路径，包含txt格式的检测结果')
     parser.add_argument('-g', '--gt', type=str, help='真值标注文件夹路径，包含txt格式的标注文件')
     parser.add_argument('-c', '--config', type=str, required=True, help='配置文件路径，例如：projects/12class.yaml')
     parser.add_argument('-i', '--iou', type=float, default=0.5, help='IOU阈值，默认为0.5')
-    parser.add_argument('-d', '--deep-analysis', type=str, help='指定要深度分析的类别名称')
+    parser.add_argument('-d', '--deep-analysis', type=str, nargs='+', help='指定要深度分析的类别名称，可以使用all分析所有类别')
     parser.add_argument('-v', '--vis-dir', type=str, help='可视化结果保存目录，默认为 ./datasets/{project_name}/analysis')
     
     args = parser.parse_args()
