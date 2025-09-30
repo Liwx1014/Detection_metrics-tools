@@ -57,14 +57,16 @@ def generate_gt(args):
     if os.path.exists(gt_folder):
         shutil.rmtree(gt_folder)
     os.makedirs(gt_folder, exist_ok=True)
-
+    # 1. 定义支持的常见图像文件扩展名 (统一使用小写)
+    SUPPORTED_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tiff')
     # 获取所有图片和XML文件路径
     image_paths = []
     xml_paths = []
     for img_root, img_dirs, img_files in os.walk(image_folder):
         for img_file in img_files:
-            image_path = os.path.join(img_root, img_file)
-            image_paths.append(image_path)
+            if img_file.lower().endswith(SUPPORTED_EXTENSIONS):
+                image_path = os.path.join(img_root, img_file)
+                image_paths.append(image_path)
     for xml_root, xml_dirs, xml_files in os.walk(xml_folder):
         for xml_file in xml_files:
             xml_path = os.path.join(xml_root, xml_file)

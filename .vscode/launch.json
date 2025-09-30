@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: Smoke Detection",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/generate.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-mo",
+                "pred",
+                "-c",
+                "/mnt/18T/liwx/H800-Mount/Code/Experiment/tools/detection_metrics/projects/smoke_yolo.yaml",
+                "-m",
+                "yolo"
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "6"
+            }
+        }
+    ]
+}

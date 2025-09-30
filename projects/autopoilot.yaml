@@ -1,0 +1,73 @@
+project_name: "autopilot"
+
+transform_mapping:
+  1: "fire"
+  2: "smoke"
+  3: "nest"
+  4: "dxyw"
+  5: "coated_steel_sheet"
+  6: "dustproof_net"
+  7: "tower_crane"
+  8: "truck_crane"
+  9: "bulldozer"
+  10: "pump_truck"
+  11: "cement_mixer_truck"
+  12: "truck"
+  13: "excavator"
+  14: "greenhouse"
+  15: "tarpaulin"
+  16: "piling_rig"
+  17: "piling_rig_b"
+  18: "piling_rig_c"   
+  19: "oil_tanker_truck"
+  20: "truck_crane_b"
+  21: "sgjx"
+  22: "roller"
+
+#['car',"bike","truck","human"]
+yolo_mapping:
+  0: "car"
+  1: "bike"
+  2: "truck"
+  3: "human"
+#
+cls_score_thre:
+  car: 0.3  
+  bike: 0.3
+  truck: 0.3
+  human: 0.3
+
+cls_need_merge: 
+
+paths:
+  image_folder: "/mnt/18T/liwx/H800-Mount/DataSet/ify_competition/Autopilot_Dataset/images/val"
+  xml_folder: "/mnt/18T/liwx/H800-Mount/DataSet/ify_competition/Autopilot_Dataset/annotations/val"
+  label_folder: "/mnt/18T/liwx/H800-Mount/DataSet/ify_competition/Autopilot_Dataset/labels/val"
+
+model_path: '/mnt/18T/liwx/H800-Mount/Code/Experiment/ultralytics-yolov11/runs/train/AutoPilot-1088-X-/weights/best.pt'
+#model_config: "./model/dfine/core/config/dfine/dfine_hgnetv2_x_coco.yml"
+xml_save_path: "/mnt/18T/liwx/H800-Mount/DataSet/ify_competition/Autopilot_Dataset/annotations/val"
+
+class_mapping:
+  Car: "car"
+  Bike: "bike"
+  Truck: "truck"  
+  Human: "human"
+  # fandouche: "truck"
+  # construction_machinery: sgjx
+  # oil_tanker_truck: "truck"
+  # cement_mixer_truck: "truck"
+  # truck_crane_b: "truck"
+  # roller: "bulldozer"
+  # long_excavator: "excavator"
+  # piling_rig_c: "piling_rig"
+  # coated_steel_sheet:
+  # dustproof_net:
+  # greenhouse:
+  # tarpaulin:
+
+# 添加标签尺寸过滤阈值配置
+filter_size:
+  min_size: 0  # 长宽同时小于此值的标签将被过滤
+  min_edge: 0   # 任一边小于此值的标签将被过滤
+  

@@ -194,18 +194,21 @@ def detect(model, im_pil, label_mapping, cls_score_thre, cls_need_merge, device)
         output = model(im_data, orig_size)
     predicted_labels, predicted_boxes, predicted_scores = output # (x1, y1, x2, y2)
     # predicted_labels, predicted_boxes, predicted_scores = filter_boxes(predicted_labels, predicted_boxes, predicted_scores)
+    print(label_mapping, cls_score_thre, cls_need_merge)
     filtered_boxes, filtered_labels, filtered_scores = non_max_suppression(
         predicted_labels,
         predicted_boxes,
         predicted_scores,
         label_mapping=label_mapping,
-        conf_thres=cls_score_thre,
-        iou_thres=0.4,
+        conf_thres=0.35,
+        iou_thres=0.5,
         classes=cls_need_merge,
         agnostic=False,
         max_det=100,
         max_nms=1000
     )
+
+    print(filtered_boxes[0].shape,filtered_labels[0].shape,filtered_scores[0].shape)
     return filtered_labels[0].cpu().numpy(), filtered_boxes[0].cpu().numpy(), filtered_scores[0].cpu().numpy()
 
 def output_to_xml(labels, boxes, scores, img_size, label_mapping, class_mapping, img_name, img_path, save_path):
@@ -428,8 +431,11 @@ def generate_xml(args):
     #             with open(error_txt, 'a') as error_log:
     #                 error_log.write(f'{error_path} 生成时发生错误: {error}\n')
     for img_name in tqdm(img_names, desc="Processing Images"):
+        if img_name.endswith('.npy'):
+            continue
         img_path = os.path.join(img_paths, img_name)
         im_pil = Image.open(img_path).convert('RGB')
+        cls_score_thre = 0.25 #和yolo对齐
         labels, boxes, scores = detect(model, im_pil, label_mapping, cls_score_thre, cls_need_merge, device)
         if args.mode == "xml":
             save_path = args.xml_output if args.xml_output else os.path.join('./datasets', project_name, 'xmls')

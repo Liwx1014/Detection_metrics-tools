@@ -1,0 +1,43 @@
+project_name: "smoke_detr"
+
+transform_mapping:
+  1: "smoke"
+
+
+yolo_mapping:
+  0: "smoke"
+
+cls_score_thre:
+  smoke: 0.5  # smoke
+
+cls_need_merge: 
+
+paths:
+  image_folder: "/data1/home/lwx/work/DataSet/DataSet_Smoke_V2/smoke_0714/images/val"
+  xml_folder: "/data1/home/lwx/work/DataSet/DataSet_Smoke_V2/smoke_0714/annotations/val"
+  label_folder: "/data1/home/lwx/work/DataSet/DataSet_Smoke_V2/smoke_0714y/labels/val"
+
+model_path: '/data1/home/lwx/work/Code/Experiment/ultralytics-yolov11/runs/train/640-detr-x-0717-deafault2/weights/best.pt'
+#model_config: "/data1/home/lwx/work/Code/Experiment/JY_DEIM_RAW/configsYCX/deim_dfine/deim_hgnetv2_x_coco.yml"
+
+
+class_mapping:
+  smoke: "smoke"
+  # fandouche: "truck"
+  # construction_machinery: sgjx
+  # oil_tanker_truck: "truck"
+  # cement_mixer_truck: "truck"
+  # truck_crane_b: "truck"
+  # roller: "bulldozer"
+  # long_excavator: "excavator"
+  # piling_rig_c: "piling_rig"
+  # coated_steel_sheet:
+  # dustproof_net:
+  # greenhouse:
+  # tarpaulin:
+
+# 添加标签尺寸过滤阈值配置
+filter_size:
+  min_size: 0  # 长宽同时小于此值的标签将被过滤
+  min_edge: 0   # 任一边小于此值的标签将被过滤
+  

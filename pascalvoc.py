@@ -442,7 +442,7 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--gt', type=str, help='真值标注文件夹路径，包含txt格式的标注文件')
     parser.add_argument('-c', '--config', type=str, required=True, help='配置文件路径，例如：projects/12class.yaml')
     parser.add_argument('-i', '--iou', type=float, default=0.5, help='IOU阈值，默认为0.5')
-    parser.add_argument('-d', '--deep-analysis', type=str, nargs='+', help='指定要深度分析的类别名称，可以使用all分析所有类别')
+    parser.add_argument('-d', '--deep-analysis', type=str,nargs='+', help='指定要深度分析的类别名称，可以使用all分析所有类别')
     parser.add_argument('-v', '--vis-dir', type=str, help='可视化结果保存目录，默认为 ./datasets/{project_name}/analysis')
     
     args = parser.parse_args()
